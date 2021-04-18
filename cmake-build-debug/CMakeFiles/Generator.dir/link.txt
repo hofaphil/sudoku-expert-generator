@@ -1,0 +1,1 @@
+/usr/local/Cellar/gcc/9.2.0_3/bin/gcc-9 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/Generator.dir/main.c.o CMakeFiles/Generator.dir/Sudoku.c.o CMakeFiles/Generator.dir/Block.c.o CMakeFiles/Generator.dir/Number.c.o -o Generator 
