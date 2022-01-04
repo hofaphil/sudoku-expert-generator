@@ -3,6 +3,14 @@
 
 #include "Block.h"
 
+int block_conflict(block *block, int number);
+
+int line_conflict(block *block, int number, int row, int column);
+
+int has_in_row(block *block, int number, int row);
+
+int has_in_column(block *block, int number, int column);
+
 block new_block()
 {
     block b;
