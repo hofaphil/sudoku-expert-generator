@@ -4,8 +4,6 @@
 
 #include "Sudoku.h"
 
-int solution_flag = -1;
-
 sudoku *new_sudoku()
 {
     sudoku *s = malloc(sizeof(sudoku));
@@ -23,7 +21,7 @@ int create(sudoku *sudoku, int difficulty)
     generate(sudoku, 1, 1);
 
     for (int i = 0; i < 9; i++)
-        sudoku->solution[i] = new_block();
+        sudoku->solution[i] = new_block_copy(sudoku->blocks[i]);
 
     return delete_numbers(difficulty, sudoku->blocks);
 }
@@ -103,8 +101,6 @@ int check_solutions(int index, int x, int z, int number, block holder_num[9])
     }
 
     for (int j = 1; j < 10; j++) {
-        if (solution_flag != -1)
-            return 1;
         if (j == number)
             continue;
 
@@ -122,7 +118,7 @@ int check_solutions(int index, int x, int z, int number, block holder_num[9])
 
 int solve(block blocks[9], int number, int block)
 {
-    if (number == 10 || solution_flag != -1)
+    if (number == 10)
         return 1;
 
     if (contains(&blocks[block], number))
@@ -152,7 +148,7 @@ int solve(block blocks[9], int number, int block)
         }
 
         ready = solve(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
-    } while (!ready && solution_flag == -1);
+    } while (!ready);
     return 1;
 }
 
@@ -194,7 +190,6 @@ int generate(sudoku *sudoku, int number, int block)
 
 block *get_solution(block sudoku[])
 {
-    solution_flag = -1;
     block solution[9];
     init_block(solution);
     for (int i = 0; i < 9; i++)
