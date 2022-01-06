@@ -200,17 +200,19 @@ int generate(sudoku *sudoku, int number, int block)
     return 1;
 }
 
-block *get_solution(block sudoku[])
+void solve_sudoku(sudoku *sudoku)
 {
-    block solution[9];
-    init_block(solution);
-    for (int i = 0; i < 9; i++)
-        set_numbers(&solution[i], sudoku[i].numbers);
+	block solution[9];
+	init_block(solution);
+	for (int i = 0; i < 9; i++)
+	  	set_numbers(&solution[i], sudoku->blocks[i].numbers);
 
-    if (!solve(solution, 1, 0))
-        exit(0);
+	if (!solve(solution, 1, 0))
+	  	exit(0);
 
-    return solution;
+	set_solution(sudoku, solution);
+
+  set_solution(sudoku, solution);
 }
 
 void set_solution(sudoku *sudoku, block blocks[])
