@@ -30,7 +30,7 @@ int insert(block *block, int number, int row, int column);
 
 int insert_without_block_conflict(block *block, int number, int row, int column);
 
-int delete(block *block, int number);
+int delete_number(block *block, int number);
 
 void delete_with_position(block *block, int number, int row, int column);
 

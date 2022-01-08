@@ -59,7 +59,7 @@ int delete_numbers(int difficulty, block blocks[9])
         int number = numbers[array_index++].number;
 
         block holder = new_block_copy(blocks[index]);
-        if (delete(&blocks[index], number)) {
+        if (delete_number(&blocks[index], number)) {
             b++;
 
             if (!check_solutions(index, blocks[index].latest_del_index_x, blocks[index].latest_del_index_z, number,
