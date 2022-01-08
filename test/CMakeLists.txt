@@ -12,7 +12,7 @@ FetchContent_MakeAvailable(gtest)
 add_executable(
         generator-tests
         GeneratorTests.cpp
-)
+        NumberTests.cpp)
 
 target_link_libraries(
         generator-tests
