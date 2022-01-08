@@ -17,12 +17,7 @@ block new_block()
         for (int j = 0; j < 3; j++)
             b.numbers[i][j] = 0;
 
-    for (int j = 0; j < 3; j++)
-        for (int i = 0; i < 10; i++) {
-            b.contains_number[i] = 0;
-            b.row[j][i] = 0;
-            b.column[j][i] = 0;
-        }
+  	set_numbers(&b, b.numbers);
 
     b.latest_del_index_x = b.latest_del_index_z = -1;
     return b;
