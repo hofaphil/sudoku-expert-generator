@@ -114,6 +114,7 @@ TEST(BlockTests, insert)
     // should work
     int ret = insert(&b, number, row, col);
 
+    // TODO correct return value!
     EXPECT_EQ(ret, 1);
     check_contains_number(&b, number, row, col, true);
 

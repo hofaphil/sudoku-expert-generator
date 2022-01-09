@@ -12,7 +12,7 @@ void init_block(block block[]);
 
 int check_solutions(int index, int x, int z, int number, block holder_num[9]);
 
-int solve(block blocks[9], int number, int block);
+int solve_sudoku(block blocks[9], int number, int block);
 
 int generate(sudoku *sudoku, int number, int block);
 
@@ -41,7 +41,7 @@ int create(sudoku *sudoku, int difficulty)
 int delete_numbers(int difficulty, block blocks[9])
 {
     int b = 0;
-    int diff = difficulty * 7 + 40;
+    int diff = difficulty * 7 + 42;
 
     number numbers[81];
     int array_index = 0;
@@ -117,7 +117,7 @@ int check_solutions(int index, int x, int z, int number, block holder_num[9])
             continue;
 
         if (insert(&holder_num[index], j, x, z)) {
-            if (solve(holder_num, 1, 0)) {
+            if (solve_sudoku(holder_num, 1, 0)) {
                 for (int i = 0; i < 9; i++)
                     set_numbers(&holder_num[i], holder[i].numbers);
                 return 0;
@@ -128,13 +128,13 @@ int check_solutions(int index, int x, int z, int number, block holder_num[9])
     return 1;
 }
 
-int solve(block blocks[9], int number, int block)
+int solve_sudoku(block blocks[9], int number, int block)
 {
     if (number == 10)
         return 1;
 
     if (contains(&blocks[block], number))
-        return solve(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
+        return solve_sudoku(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
 
     int counter = -1;
     int ready = 0;
@@ -159,7 +159,7 @@ int solve(block blocks[9], int number, int block)
             return 0;
         }
 
-        ready = solve(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
+        ready = solve_sudoku(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
     }
     while (!ready);
     return 1;
@@ -202,19 +202,18 @@ int generate(sudoku *sudoku, int number, int block)
     return 1;
 }
 
-void solve_sudoku(sudoku *sudoku)
+int solve(sudoku *sudoku)
 {
     block solution[9];
     init_block(solution);
     for (int i = 0; i < 9; i++)
         set_numbers(&solution[i], sudoku->blocks[i].numbers);
 
-    if (!solve(solution, 1, 0))
-        exit(0);
+    if (!solve_sudoku(solution, 1, 0))
+        return 1;
 
     set_solution(sudoku, solution);
-
-    set_solution(sudoku, solution);
+    return 0;
 }
 
 void set_solution(sudoku *sudoku, block blocks[])
