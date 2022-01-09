@@ -11,7 +11,7 @@ FetchContent_MakeAvailable(gtest)
 
 add_executable(
         generator-tests
-        GeneratorTests.cpp
+        SudokuTests.cpp
         NumberTests.cpp
         BlockTests.cpp
 )
