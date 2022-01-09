@@ -17,7 +17,7 @@ block new_block()
         for (int j = 0; j < 3; j++)
             b.numbers[i][j] = 0;
 
-  	set_numbers(&b, b.numbers);
+    set_numbers(&b, b.numbers);
 
     b.latest_del_index_x = b.latest_del_index_z = -1;
     return b;
@@ -95,7 +95,8 @@ void generate_random(block *block)
             block->contains_number[i] = 1;
             block->row[row][i] = 1;
             block->column[column][i] = 1;
-        } else
+        }
+        else
             i--;
     }
 }
@@ -108,9 +109,9 @@ int block_conflict(block *block, int number)
 int line_conflict(block *block, int number, int row, int column)
 {
     return !(!has_in_row(block->row_partner[0], number, row) &&
-             !has_in_row(block->row_partner[1], number, row) &&
-             !has_in_column(block->column_partner[0], number, column) &&
-             !has_in_column(block->column_partner[1], number, column));
+        !has_in_row(block->row_partner[1], number, row) &&
+        !has_in_column(block->column_partner[0], number, column) &&
+        !has_in_column(block->column_partner[1], number, column));
 }
 
 int has_in_row(block *block, int number, int row)

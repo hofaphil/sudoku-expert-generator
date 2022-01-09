@@ -2,5 +2,5 @@
 
 TEST(GeneratorTests, test)
 {
-  ASSERT_TRUE(true);
+    ASSERT_TRUE(true);
 }

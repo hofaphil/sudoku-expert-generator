@@ -160,7 +160,8 @@ int solve(block blocks[9], int number, int block)
         }
 
         ready = solve(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
-    } while (!ready);
+    }
+    while (!ready);
     return 1;
 }
 
@@ -196,23 +197,24 @@ int generate(sudoku *sudoku, int number, int block)
         else
             ready = generate(sudoku, number, block + 1);
 
-    } while (!ready);
+    }
+    while (!ready);
     return 1;
 }
 
 void solve_sudoku(sudoku *sudoku)
 {
-	block solution[9];
-	init_block(solution);
-	for (int i = 0; i < 9; i++)
-	  	set_numbers(&solution[i], sudoku->blocks[i].numbers);
+    block solution[9];
+    init_block(solution);
+    for (int i = 0; i < 9; i++)
+        set_numbers(&solution[i], sudoku->blocks[i].numbers);
 
-	if (!solve(solution, 1, 0))
-	  	exit(0);
+    if (!solve(solution, 1, 0))
+        exit(0);
 
-	set_solution(sudoku, solution);
+    set_solution(sudoku, solution);
 
-  set_solution(sudoku, solution);
+    set_solution(sudoku, solution);
 }
 
 void set_solution(sudoku *sudoku, block blocks[])
