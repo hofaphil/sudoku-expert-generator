@@ -10,18 +10,35 @@ TEST(SudokuTests, new_sudoku)
 
     for (int k = 0; k < 9; k++) {
         for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 3; j++) {
                 EXPECT_EQ(sudoku->blocks[k].numbers[i][j], 0);
+                EXPECT_EQ(sudoku->solution[k].numbers[i][j], 0);
+            }
 
         for (int j = 0; j < 3; j++)
             for (int i = 1; i < 10; i++) {
                 EXPECT_EQ(sudoku->blocks[k].contains_number[i], 0);
                 EXPECT_EQ(sudoku->blocks[k].row[j][i], 0);
                 EXPECT_EQ(sudoku->blocks[k].column[j][i], 0);
+
+                EXPECT_EQ(sudoku->solution[k].contains_number[i], 0);
+                EXPECT_EQ(sudoku->solution[k].row[j][i], 0);
+                EXPECT_EQ(sudoku->solution[k].column[j][i], 0);
             }
 
         EXPECT_EQ(sudoku->blocks[k].latest_del_index_x, -1);
         EXPECT_EQ(sudoku->blocks[k].latest_del_index_x, sudoku->blocks[k].latest_del_index_z);
+
+        EXPECT_EQ(sudoku->solution[k].latest_del_index_x, -1);
+        EXPECT_EQ(sudoku->solution[k].latest_del_index_x, sudoku->blocks[k].latest_del_index_z);
+
+        for (int i = 0; i < 2; i++) {
+            EXPECT_NE(sudoku->blocks[k].row_partner[i], nullptr);
+            EXPECT_NE(sudoku->blocks[k].column_partner[i], nullptr);
+
+            EXPECT_NE(sudoku->solution[k].row_partner[i], nullptr);
+            EXPECT_NE(sudoku->solution[k].column_partner[i], nullptr);
+        }
     }
 }
 
@@ -45,6 +62,24 @@ TEST(SudokuTests, create)
                     EXPECT_LT(sudoku->solution[k].numbers[i][j], 10);
                 }
             }
+        }
+    }
+}
+
+TEST(SudokuTests, init_block)
+{
+    block block[9];
+    init_block(block);
+
+    for (int k = 0; k < 9; k++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                EXPECT_EQ(block[k].numbers[i][j], 0);
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            EXPECT_NE(block[k].row_partner[i], nullptr);
+            EXPECT_NE(block[k].column_partner[i], nullptr);
         }
     }
 }
@@ -96,6 +131,10 @@ TEST(SudokuTests, set_solution)
                 EXPECT_EQ(src->solution[k].column[i][number], tar->solution[k].column[i][number]);
             }
         }
+        for (int i = 0; i < 2; i++) {
+            EXPECT_NE(src->solution[k].row_partner[i], nullptr);
+            EXPECT_NE(src->solution[k].column_partner[i], nullptr);
+        }
     }
 }
 
@@ -116,6 +155,10 @@ TEST(SudokuTests, set_sudoku)
                 EXPECT_EQ(src->blocks[k].row[i][number], tar->blocks[k].row[i][number]);
                 EXPECT_EQ(src->blocks[k].column[i][number], tar->blocks[k].column[i][number]);
             }
+        }
+        for (int i = 0; i < 2; i++) {
+            EXPECT_NE(src->blocks[k].row_partner[i], nullptr);
+            EXPECT_NE(src->blocks[k].column_partner[i], nullptr);
         }
     }
 }

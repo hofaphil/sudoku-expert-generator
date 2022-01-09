@@ -8,8 +8,6 @@ void shuffle(number *array, int n);
 
 int delete_numbers(int difficulty, block blocks[9]);
 
-void init_block(block block[]);
-
 int check_solutions(int index, int x, int z, int number, block holder_num[9]);
 
 int solve_sudoku(block blocks[9], int number, int block);
@@ -20,6 +18,7 @@ sudoku *new_sudoku()
 {
     sudoku *s = malloc(sizeof(sudoku));
     init_block(s->blocks);
+    init_block(s->solution);
     srand(time(NULL));
     return s;
 }
@@ -255,4 +254,3 @@ void shuffle(number *array, int n)
             array[i] = t;
         }
 }
-

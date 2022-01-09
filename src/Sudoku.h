@@ -14,6 +14,8 @@ sudoku *new_sudoku(void);
 
 int create(sudoku *sudoku, int difficulty);
 
+void init_block(block block[]);
+
 int solve(sudoku *sudoku);
 
 void set_solution(sudoku *sudoku, block blocks[]);

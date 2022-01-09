@@ -21,3 +21,5 @@ target_link_libraries(
         generator
         gtest_main
 )
+
+add_test(NAME AllTests COMMAND generator-tests)

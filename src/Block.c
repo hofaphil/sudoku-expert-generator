@@ -20,12 +20,21 @@ block new_block()
     set_numbers(&b, b.numbers);
 
     b.latest_del_index_x = b.latest_del_index_z = -1;
+
+    for (int i = 0; i < 2; i++) {
+        b.row_partner[i] = NULL;
+        b.column_partner[i] = NULL;
+    }
     return b;
 }
 
 block new_block_copy(block copy_block)
 {
     block b = new_block();
+    for (int i = 0; i < 2; i++) {
+        b.row_partner[i] = copy_block.row_partner[i];
+        b.column_partner[i] = copy_block.column_partner[i];
+    }
     set_numbers(&b, copy_block.numbers);
     return b;
 }

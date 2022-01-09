@@ -33,6 +33,11 @@ TEST(BlockTests, new_block)
 
     EXPECT_EQ(block.latest_del_index_x, -1);
     EXPECT_EQ(block.latest_del_index_x, block.latest_del_index_z);
+
+    for (int i = 0; i < 2; i++) {
+        EXPECT_EQ(block.row_partner[i], nullptr);
+        EXPECT_EQ(block.column_partner[i], nullptr);
+    }
 }
 
 TEST(BlockTests, new_block_copy)
@@ -53,6 +58,11 @@ TEST(BlockTests, new_block_copy)
 
     EXPECT_EQ(block_orig.latest_del_index_x, block_copy.latest_del_index_x);
     EXPECT_EQ(block_orig.latest_del_index_z, block_copy.latest_del_index_z);
+
+    for (int i = 0; i < 2; i++) {
+        EXPECT_EQ(block_orig.row_partner[i], block_copy.row_partner[i]);
+        EXPECT_EQ(block_orig.column_partner[i], block_copy.column_partner[i]);
+    }
 }
 
 TEST(BlockTests, generate_random)
@@ -114,7 +124,6 @@ TEST(BlockTests, insert)
     // should work
     int ret = insert(&b, number, row, col);
 
-    // TODO correct return value!
     EXPECT_EQ(ret, 1);
     check_contains_number(&b, number, row, col, true);
 
