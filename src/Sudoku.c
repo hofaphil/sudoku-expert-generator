@@ -17,8 +17,8 @@ int generate(sudoku *sudoku, int number, int block);
 sudoku *new_sudoku()
 {
     sudoku *s = malloc(sizeof(sudoku));
-    init_block(s->blocks);
-    init_block(s->solution);
+    init_blocks(s->blocks);
+    init_blocks(s->solution);
     srand(time(NULL));
     return s;
 }
@@ -71,7 +71,7 @@ int delete_numbers(int difficulty, block blocks[9])
     return b;
 }
 
-void init_block(block block[9])
+void init_blocks(block block[9])
 {
     for (int i = 0; i < 9; i++)
         block[i] = new_block();
@@ -204,7 +204,7 @@ int generate(sudoku *sudoku, int number, int block)
 int solve(sudoku *sudoku)
 {
     block solution[9];
-    init_block(solution);
+    init_blocks(solution);
     for (int i = 0; i < 9; i++)
         set_numbers(&solution[i], sudoku->blocks[i].numbers);
 
@@ -215,14 +215,14 @@ int solve(sudoku *sudoku)
     return 0;
 }
 
-void set_solution(sudoku *sudoku, block blocks[])
+void set_solution(sudoku *sudoku, block blocks[9])
 {
     for (int i = 0; i < 9; i++) {
         sudoku->solution[i] = blocks[i];
     }
 }
 
-void set_sudoku(sudoku *sudoku, block blocks[])
+void set_sudoku(sudoku *sudoku, block blocks[9])
 {
     for (int i = 0; i < 9; i++) {
         sudoku->blocks[i] = blocks[i];

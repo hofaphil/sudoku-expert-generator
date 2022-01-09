@@ -62,14 +62,17 @@ TEST(SudokuTests, create)
                     EXPECT_LT(sudoku->solution[k].numbers[i][j], 10);
                 }
             }
+            for (int number = 1; number < 10; number++) {
+                EXPECT_EQ(sudoku->solution[k].contains_number[number], 1);
+            }
         }
     }
 }
 
-TEST(SudokuTests, init_block)
+TEST(SudokuTests, init_blocks)
 {
     block block[9];
-    init_block(block);
+    init_blocks(block);
 
     for (int k = 0; k < 9; k++) {
         for (int i = 0; i < 3; i++) {
@@ -107,7 +110,69 @@ TEST(SudokuTests, solve)
                 EXPECT_EQ(number, s1->solution[k].numbers[i][j]);
                 EXPECT_EQ(s2->solution[k].contains_number[number], s1->solution[k].contains_number[number]);
                 EXPECT_EQ(s2->solution[k].row[i][number], s1->solution[k].row[i][number]);
-                EXPECT_EQ(s2->solution[k].column[i][number], s1->solution[k].column[i][number]);
+                EXPECT_EQ(s2->solution[k].column[j][number], s1->solution[k].column[j][number]);
+            }
+        }
+    }
+
+    // 452  738  916
+    // 781  926  453
+    // 396  154  287
+    //
+    // 965  847  321
+    // 278  319  321
+    // 134  265  879
+    //
+    // 523  471  698
+    // 847  692  135
+    // 619  583  742
+
+    int numbers[9][3][3] = {
+        {{0, 5, 0}, {7, 0, 0}, {0, 9, 6}},
+        {{0, 0, 0}, {0, 0, 0}, {1, 0, 4}},
+        {{0, 0, 0}, {4, 0, 3}, {2, 0, 0}},
+
+        {{0, 0, 0}, {0, 0, 8}, {0, 0, 0}},
+        {{0, 0, 7}, {0, 1, 0}, {2, 0, 0}},
+        {{0, 0, 0}, {0, 6, 4}, {0, 0, 9}},
+
+        {{0, 0, 0}, {8, 4, 0}, {6, 0, 9}},
+        {{0, 0, 1}, {0, 0, 2}, {0, 0, 3}},
+        {{0, 9, 0}, {0, 0, 0}, {7, 0, 0}}
+    };
+
+    int solution[9][3][3] = {
+        {{4, 5, 2}, {7, 8, 1}, {3, 9, 6}},
+        {{7, 3, 8}, {9, 2, 6}, {1, 5, 4}},
+        {{9, 1, 6}, {4, 5, 3}, {2, 8, 7}},
+
+        {{9, 6, 5}, {2, 7, 8}, {1, 3, 4}},
+        {{8, 4, 7}, {3, 1, 9}, {2, 6, 5}},
+        {{3, 2, 1}, {5, 6, 4}, {8, 7, 9}},
+
+        {{5, 2, 3}, {8, 4, 7}, {6, 1, 9}},
+        {{4, 7, 1}, {6, 9, 2}, {5, 8, 3}},
+        {{6, 9, 8}, {1, 3, 5}, {7, 4, 2}}
+    };
+
+    block blocks[9];
+    init_blocks(blocks);
+    for (int i = 0; i < 9; i++)
+        set_numbers(&blocks[i], numbers[i]);
+
+    s1 = new_sudoku();
+    set_sudoku(s1, blocks);
+    solve(s1);
+
+    for (int k = 0; k < 9; k++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                // check for equal solution
+                int number = solution[k][i][j];
+                EXPECT_EQ(number, s1->solution[k].numbers[i][j]);
+                EXPECT_EQ(s1->solution[k].contains_number[number], 1);
+                EXPECT_EQ(s1->solution[k].row[i][number], 1);
+                EXPECT_EQ(s1->solution[k].column[j][number], 1);
             }
         }
     }
@@ -128,7 +193,7 @@ TEST(SudokuTests, set_solution)
                 EXPECT_EQ(number, tar->solution[k].numbers[i][j]);
                 EXPECT_EQ(src->solution[k].contains_number[number], tar->solution[k].contains_number[number]);
                 EXPECT_EQ(src->solution[k].row[i][number], tar->solution[k].row[i][number]);
-                EXPECT_EQ(src->solution[k].column[i][number], tar->solution[k].column[i][number]);
+                EXPECT_EQ(src->solution[k].column[j][number], tar->solution[k].column[j][number]);
             }
         }
         for (int i = 0; i < 2; i++) {
@@ -153,7 +218,7 @@ TEST(SudokuTests, set_sudoku)
                 EXPECT_EQ(number, tar->blocks[k].numbers[i][j]);
                 EXPECT_EQ(src->blocks[k].contains_number[number], tar->blocks[k].contains_number[number]);
                 EXPECT_EQ(src->blocks[k].row[i][number], tar->blocks[k].row[i][number]);
-                EXPECT_EQ(src->blocks[k].column[i][number], tar->blocks[k].column[i][number]);
+                EXPECT_EQ(src->blocks[k].column[j][number], tar->blocks[k].column[j][number]);
             }
         }
         for (int i = 0; i < 2; i++) {
