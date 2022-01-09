@@ -31,6 +31,25 @@ typedef struct sudoku
     block solution[9];  // the solution (filled out)
 } sudoku;
 ```
+Indexing the block-array:
+<table>
+  <tr>
+    <td>0</td>
+    <td>1</td>
+    <td>2</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>4</td>
+    <td>5</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>7</td>
+    <td>8</td>
+  </tr>
+</table>
+
 Both of these arrays are `block` types.
 ```c
 struct block
@@ -44,3 +63,21 @@ struct block
     int latest_del_index_x, latest_del_index_z;
 };
 ```
+Indexing the numbers-array:
+<table>
+  <tr>
+    <td>0, 0</td>
+    <td>0, 1</td>
+    <td>0, 2</td>
+  </tr>
+  <tr>
+    <td>1, 0</td>
+    <td>1, 1</td>
+    <td>1, 2</td>
+  </tr>
+  <tr>
+    <td>2, 0</td>
+    <td>2, 1</td>
+    <td>2, 2</td>
+  </tr>
+</table>
