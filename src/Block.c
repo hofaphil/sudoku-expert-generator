@@ -124,7 +124,7 @@ int has_in_column(block *block, int number, int column)
     return block->column[column][number];
 }
 
-int delete(block *block, int number)
+int delete_number(block *block, int number)
 {
     if (block->contains_number[number]) {
         block->contains_number[number] = 0;
@@ -144,7 +144,7 @@ int delete(block *block, int number)
     return 0;
 }
 
-void delete_with_position(block *block, int number, int row, int column)
+int delete_with_position(block *block, int number, int row, int column)
 {
     if (block->contains_number[number]) {
         block->contains_number[number] = 0;
@@ -153,7 +153,9 @@ void delete_with_position(block *block, int number, int row, int column)
         block->column[column][number] = 0;
         block->latest_del_index_x = row;
         block->latest_del_index_z = column;
+        return 1;
     }
+    return 0;
 }
 
 int contains(block *block, int number)
