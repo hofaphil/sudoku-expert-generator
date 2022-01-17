@@ -1,19 +1,13 @@
 # sudoku-expert-generator
 The sudoku generator for the SudokuExpert app. This generator creates a sudoku with just one solution. It can also produce a solution for a given sudoku.
 ### Generate a Sudoku
-Generating a sudoku is very easy. Just pick your difficulty and create one. After calling `create(int difficulty)` the `blocks` and `solution` array are filled.<br>
-The difficulty indicates how many fields are empty and have to be filled.
-
-| Difficulty  | Free fields |
-| ----------- | ----------- |
-| 0           | 42          |
-| 1           | 49          |
-| 2           | 56          |
+Generating a sudoku is very easy. Just pick your desired number of free fields and create one. After calling `create(int free_fields)` the `blocks` and `solution` arrays are filled.<br>
+The `free_fields` indicates how many fields should empty and have to be filled. The passed number can differ from the actual number of free fields, since the algorithm may stop earlier (above all `free_fields > 56`).
 
 ```c
 sudoku *sudoku = new_sudoku();
-int difficulty = 1;
-create(sudoku, difficulty);
+int free_fields = 50;
+create(sudoku, free_fields); // returns the number of the free fields
 ```
 ### Solve a Sudoku
 To solve a sudoku, you need a valid (solveable) `block`:
