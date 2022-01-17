@@ -23,7 +23,7 @@ sudoku *new_sudoku()
     return s;
 }
 
-int create(sudoku *sudoku, int difficulty)
+int create(sudoku *sudoku, int freeFields)
 {
     generate_random(&sudoku->blocks[0]);
     generate_random(&sudoku->blocks[4]);
@@ -34,13 +34,12 @@ int create(sudoku *sudoku, int difficulty)
     for (int i = 0; i < 9; i++)
         sudoku->solution[i] = new_block_copy(sudoku->blocks[i]);
 
-    return delete_numbers(difficulty, sudoku->blocks);
+    return delete_numbers(freeFields, sudoku->blocks);
 }
 
-int delete_numbers(int difficulty, block blocks[9])
+int delete_numbers(int freeFields, block blocks[9])
 {
     int b = 0;
-    int diff = difficulty * 7 + 42;
 
     number numbers[81];
     int array_index = 0;
@@ -53,7 +52,7 @@ int delete_numbers(int difficulty, block blocks[9])
 
     array_index = 0;
 
-    while (b < diff && array_index < 81) {
+    while (b < freeFields && array_index < 81) {
         int index = numbers[array_index].block;
         int number = numbers[array_index++].number;
 

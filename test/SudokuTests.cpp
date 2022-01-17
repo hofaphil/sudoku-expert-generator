@@ -44,11 +44,13 @@ TEST(SudokuTests, new_sudoku)
 
 TEST(SudokuTests, create)
 {
-    for (int diff = 0; diff < 3; diff++) {
+    for (int runs = 0; runs < 3; runs++) {
         sudoku *sudoku = new_sudoku();
 
-        int free_fields = create(sudoku, diff);
-        EXPECT_GT(free_fields, (42 + 7 * diff) - 2);
+        int exp_free_fields = (rand() % (56 - 45 + 1)) + 45;
+
+        int res_free_fields = create(sudoku, exp_free_fields);
+        EXPECT_EQ(res_free_fields, exp_free_fields);
 
         for (int k = 0; k < 9; k++) {
             for (int i = 0; i < 3; i++) {
