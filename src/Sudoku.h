@@ -12,7 +12,7 @@ typedef struct sudoku
 
 sudoku *new_sudoku(void);
 
-int create(sudoku *sudoku, int freeFields);
+int create(sudoku *sudoku, int free_fields);
 
 void init_blocks(block block[9]);
 
