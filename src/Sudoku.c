@@ -25,6 +25,9 @@ sudoku *new_sudoku()
 
 int create(sudoku *sudoku, int free_fields)
 {
+    init_blocks(sudoku->blocks);
+    init_blocks(sudoku->solution);
+
     generate_random(&sudoku->blocks[0]);
     generate_random(&sudoku->blocks[4]);
     generate_random(&sudoku->blocks[8]);
@@ -32,7 +35,7 @@ int create(sudoku *sudoku, int free_fields)
     generate(sudoku, 1, 1);
 
     for (int i = 0; i < 9; i++)
-        sudoku->solution[i] = new_block_copy(sudoku->blocks[i]);
+        set_numbers(&sudoku->solution[i], sudoku->blocks[i].numbers);
 
     return delete_numbers(free_fields, sudoku->blocks);
 }
@@ -217,14 +220,14 @@ int solve(sudoku *sudoku)
 void set_solution(sudoku *sudoku, block blocks[9])
 {
     for (int i = 0; i < 9; i++) {
-        sudoku->solution[i] = blocks[i];
+        set_numbers(&sudoku->solution[i], blocks[i].numbers);
     }
 }
 
 void set_sudoku(sudoku *sudoku, block blocks[9])
 {
     for (int i = 0; i < 9; i++) {
-        sudoku->blocks[i] = blocks[i];
+        set_numbers(&sudoku->blocks[i], blocks[i].numbers);
     }
 }
 

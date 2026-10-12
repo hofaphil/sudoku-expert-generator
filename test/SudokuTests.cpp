@@ -229,3 +229,95 @@ TEST(SudokuTests, set_sudoku)
         }
     }
 }
+// every block must point to its row/column partners within the same array
+static void expect_own_partners(block blocks[9])
+{
+    block ref[9];
+    init_blocks(ref);
+
+    for (int k = 0; k < 9; k++)
+        for (int i = 0; i < 2; i++) {
+            EXPECT_EQ(blocks[k].row_partner[i] - blocks, ref[k].row_partner[i] - ref);
+            EXPECT_EQ(blocks[k].column_partner[i] - blocks, ref[k].column_partner[i] - ref);
+        }
+}
+
+TEST(SudokuTests, partners_after_create)
+{
+    sudoku *s = new_sudoku();
+    create(s, 40);
+
+    expect_own_partners(s->blocks);
+    expect_own_partners(s->solution);
+    free(s);
+}
+
+TEST(SudokuTests, partners_after_solve)
+{
+    sudoku *src = new_sudoku();
+    create(src, 40);
+
+    sudoku *s = new_sudoku();
+    set_sudoku(s, src->blocks);
+    solve(s);
+
+    expect_own_partners(s->blocks);
+    expect_own_partners(s->solution);
+
+    // the solution must stay usable: delete and re-insert a number
+    int number = s->solution[0].numbers[0][0];
+    EXPECT_EQ(delete_with_position(&s->solution[0], number, 0, 0), 1);
+    EXPECT_EQ(insert(&s->solution[0], number, 0, 0), 1);
+    free(src);
+    free(s);
+}
+
+TEST(SudokuTests, partners_after_set)
+{
+    block blocks[9];
+    init_blocks(blocks);
+
+    sudoku *s = new_sudoku();
+    set_sudoku(s, blocks);
+    set_solution(s, blocks);
+
+    expect_own_partners(s->blocks);
+    expect_own_partners(s->solution);
+    free(s);
+}
+
+TEST(SudokuTests, create_twice)
+{
+    sudoku *s = new_sudoku();
+    create(s, 40);
+    int free_fields = create(s, 40);
+
+    EXPECT_GT(free_fields, 0);
+    expect_own_partners(s->blocks);
+    expect_own_partners(s->solution);
+
+    // the solution must be complete and valid
+    for (int k = 0; k < 9; k++)
+        for (int n = 1; n < 10; n++)
+            EXPECT_EQ(s->solution[k].contains_number[n], 1);
+
+    for (int line = 0; line < 9; line++) {
+        int in_row[10] = {0}, in_column[10] = {0};
+        for (int pos = 0; pos < 9; pos++) {
+            in_row[s->solution[line / 3 * 3 + pos / 3].numbers[line % 3][pos % 3]]++;
+            in_column[s->solution[pos / 3 * 3 + line / 3].numbers[pos % 3][line % 3]]++;
+        }
+        for (int n = 1; n < 10; n++) {
+            EXPECT_EQ(in_row[n], 1);
+            EXPECT_EQ(in_column[n], 1);
+        }
+    }
+
+    // every remaining number of the puzzle must match the solution
+    for (int k = 0; k < 9; k++)
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                if (s->blocks[k].numbers[i][j] != 0)
+                    EXPECT_EQ(s->blocks[k].numbers[i][j], s->solution[k].numbers[i][j]);
+    free(s);
+}
