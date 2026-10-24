@@ -1,258 +1,206 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 
 #include "Sudoku.h"
 
-void shuffle(number *array, int n);
+#define ALL_DIGITS 0x3FE
 
-int delete_numbers(int difficulty, block blocks[9]);
+// how long create may retry to reach the wanted free fields
+#define CREATE_TIME_LIMIT (CLOCKS_PER_SEC / 2)
 
-int check_solutions(int index, int x, int z, int number, block holder_num[9]);
+// the sudoku as 81 cells (row by row) plus bitmasks of the digits used per row, column and box
+typedef struct grid {
+    int cells[81];
+    unsigned short rows[9];
+    unsigned short cols[9];
+    unsigned short boxes[9];
+} grid;
 
-int solve_sudoku(block blocks[9], int number, int block);
+static int cell_index(const int block, const int row, const int column) {
+    return ((block / 3) * 3 + row) * 9 + (block % 3) * 3 + column;
+}
 
-int generate(sudoku *sudoku, int number, int block);
+static unsigned short candidates(grid const *g, const int cell) {
+    const int row = cell / 9;
+    const int column = cell % 9;
+    return ~(g->rows[row] | g->cols[column] | g->boxes[(row / 3) * 3 + column / 3]) & ALL_DIGITS;
+}
 
-sudoku *new_sudoku()
-{
-    sudoku *s = malloc(sizeof(sudoku));
-    init_blocks(s->blocks);
-    init_blocks(s->solution);
-    srand(time(NULL));
+static void toggle(grid *g, const int cell, const int digit) {
+    const int row = cell / 9;
+    const int column = cell % 9;
+    const unsigned short bit = (unsigned short) (1 << digit);
+    g->rows[row] ^= bit;
+    g->cols[column] ^= bit;
+    g->boxes[(row / 3) * 3 + column / 3] ^= bit;
+}
+
+static void place(grid *g, const int cell, const int digit) {
+    g->cells[cell] = digit;
+    toggle(g, cell, digit);
+}
+
+static void unplace(grid *g, const int cell, const int digit) {
+    g->cells[cell] = 0;
+    toggle(g, cell, digit);
+}
+
+static void shuffle(int *array, const int n) {
+    for (int i = n - 1; i > 0; i--) {
+        const int j = rand() % (i + 1);
+        const int t = array[j];
+        array[j] = array[i];
+        array[i] = t;
+    }
+}
+
+/*
+ * Backtracking that always branches on the empty cell with the fewest candidates.
+ * Returns the number of solutions found, but stops at limit. With limit 1 the grid stays filled
+ * with the found solution. random tries the candidates in random order (used for generating).
+ */
+static int search(grid *g, const int limit, const int random) {
+    int best = -1;
+    int best_count = 10;
+    unsigned short best_candidates = 0;
+
+    for (int cell = 0; cell < 81; cell++) {
+        if (g->cells[cell]) {
+            continue;
+        }
+
+        const unsigned short cand = candidates(g, cell);
+        const int count = __builtin_popcount(cand);
+        if (count < best_count) {
+            best = cell;
+            best_count = count;
+            best_candidates = cand;
+            if (count <= 1) {
+                break;
+            }
+        }
+    }
+
+    if (best == -1) {
+        return 1;
+    }
+
+    int digits[9];
+    int n = 0;
+    for (; best_candidates; best_candidates &= best_candidates - 1) {
+        digits[n++] = __builtin_ctz(best_candidates);
+    }
+    if (random) {
+        shuffle(digits, n);
+    }
+
+    int found = 0;
+    for (int i = 0; i < n; i++) {
+        place(g, best, digits[i]);
+        found += search(g, limit - found, random);
+        if (found >= limit) {
+            return found;
+        }
+        unplace(g, best, digits[i]);
+    }
+    return found;
+}
+
+// returns 0 if the numbers break the sudoku rules
+static int load_grid(grid *g, int blocks[9][3][3]) {
+    *g = (grid){0};
+
+    for (int b = 0; b < 9; b++)
+        for (int r = 0; r < 3; r++)
+            for (int c = 0; c < 3; c++) {
+                const int cell = cell_index(b, r, c);
+                const int digit = blocks[b][r][c];
+                if (!digit) {
+                    continue;
+                }
+                if (digit < 1 || digit > 9 || !(candidates(g, cell) & (1 << digit))) {
+                    return 0;
+                }
+                place(g, cell, digit);
+            }
+    return 1;
+}
+
+static void store_grid(grid const *g, int blocks[9][3][3]) {
+    for (int block = 0; block < 9; block++)
+        for (int row = 0; row < 3; row++)
+            for (int column = 0; column < 3; column++)
+                blocks[block][row][column] = g->cells[cell_index(block, row, column)];
+}
+
+sudoku *new_sudoku(void) {
+    sudoku *s = calloc(1, sizeof(sudoku));
+
+    // seed only once, otherwise sudokus created within the same second are identical
+    static int seeded = 0;
+    if (!seeded) {
+        srand((unsigned) time(NULL));
+        seeded = 1;
+    }
     return s;
 }
 
-int create(sudoku *sudoku, int free_fields)
-{
-    init_blocks(sudoku->blocks);
-    init_blocks(sudoku->solution);
+// one attempt: random solution, then remove numbers in random order as long as the solution stays unique
+static int create_once(sudoku *s, const int free_fields) {
+    grid g = {0};
+    search(&g, 1, 1);
+    store_grid(&g, s->solution);
 
-    generate_random(&sudoku->blocks[0]);
-    generate_random(&sudoku->blocks[4]);
-    generate_random(&sudoku->blocks[8]);
+    int order[81];
+    for (int i = 0; i < 81; i++)
+        order[i] = i;
+    shuffle(order, 81);
 
-    generate(sudoku, 1, 1);
+    // remove numbers in random order, but only if the sudoku keeps exactly one solution
+    int removed = 0;
+    for (int i = 0; i < 81 && removed < free_fields; i++) {
+        const int cell = order[i];
+        const int digit = g.cells[cell];
+        unplace(&g, cell, digit);
 
-    for (int i = 0; i < 9; i++)
-        set_numbers(&sudoku->solution[i], sudoku->blocks[i].numbers);
-
-    return delete_numbers(free_fields, sudoku->blocks);
-}
-
-int delete_numbers(int free_fields, block blocks[9])
-{
-    int b = 0;
-
-    number numbers[81];
-    int array_index = 0;
-
-    for (int i = 0; i < 9; i++)
-        for (int j = 0; j < 3; j++)
-            for (int k = 0; k < 3; k++)
-                numbers[array_index++] = new_number(i, blocks[i].numbers[j][k]);
-    shuffle(numbers, 81);
-
-    array_index = 0;
-
-    while (b < free_fields && array_index < 81) {
-        int index = numbers[array_index].block;
-        int number = numbers[array_index++].number;
-
-        block holder = new_block_copy(blocks[index]);
-        if (delete_number(&blocks[index], number)) {
-            b++;
-
-            if (!check_solutions(index, blocks[index].latest_del_index_x, blocks[index].latest_del_index_z, number,
-                                 blocks)) {
-                set_numbers(&blocks[index], holder.numbers);
-                b--;
-            }
+        grid copy = g;
+        if (search(&copy, 2, 0) == 1) {
+            removed++;
+        } else {
+            place(&g, cell, digit);
         }
     }
-    return b;
+
+    store_grid(&g, s->blocks);
+    return removed;
 }
 
-void init_blocks(block block[9])
-{
-    for (int i = 0; i < 9; i++)
-        block[i] = new_block();
-
-    set_row_partner(&block[1], &block[2], &block[0]);
-    set_column_partner(&block[3], &block[6], &block[0]);
-
-    set_row_partner(&block[0], &block[2], &block[1]);
-    set_column_partner(&block[4], &block[7], &block[1]);
-
-    set_row_partner(&block[0], &block[1], &block[2]);
-    set_column_partner(&block[5], &block[8], &block[2]);
-
-    set_row_partner(&block[4], &block[5], &block[3]);
-    set_column_partner(&block[0], &block[6], &block[3]);
-
-    set_row_partner(&block[3], &block[5], &block[4]);
-    set_column_partner(&block[1], &block[7], &block[4]);
-
-    set_row_partner(&block[3], &block[4], &block[5]);
-    set_column_partner(&block[2], &block[8], &block[5]);
-
-    set_row_partner(&block[7], &block[8], &block[6]);
-    set_column_partner(&block[0], &block[3], &block[6]);
-
-    set_row_partner(&block[6], &block[8], &block[7]);
-    set_column_partner(&block[1], &block[4], &block[7]);
-
-    set_row_partner(&block[6], &block[7], &block[8]);
-    set_column_partner(&block[2], &block[5], &block[8]);
-}
-
-int check_solutions(int index, int x, int z, int number, block holder_num[9])
-{
-    block holder[9];
-    for (int i = 0; i < 9; i++) {
-        holder[i] = new_block_copy(holder_num[i]);
-    }
-
-    for (int j = 1; j < 10; j++) {
-        if (j == number)
-            continue;
-
-        if (insert(&holder_num[index], j, x, z)) {
-            if (solve_sudoku(holder_num, 1, 0)) {
-                for (int i = 0; i < 9; i++)
-                    set_numbers(&holder_num[i], holder[i].numbers);
-                return 0;
-            }
-            set_numbers(&holder_num[index], holder[index].numbers);
-        }
-    }
-    return 1;
-}
-
-int solve_sudoku(block blocks[9], int number, int block)
-{
-    if (number == 10)
-        return 1;
-
-    if (contains(&blocks[block], number))
-        return solve_sudoku(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
-
-    int counter = -1;
-    int ready = 0;
-    int r = 0, c = 0;
+/*
+ * A single attempt often gets stuck before reaching free_fields (typically around 57),
+ * so retry with new sudokus and keep the best one until free_fields or the time limit is reached.
+ */
+int create(sudoku *s, const int free_fields) {
+    const clock_t start = clock();
+    sudoku attempt;
+    int best = -1;
 
     do {
-        delete_with_position(&blocks[block], number, r, c);
-        counter++;
-        c = (c + 1) % 3;
-        if (c == 0)
-            r = (r + 1) % 3;
-
-        while (counter < 9 && !insert_without_block_conflict(&blocks[block], number, r, c)) {
-            counter++;
-            c = (c + 1) % 3;
-            if (c == 0)
-                r = (r + 1) % 3;
+        int removed = create_once(&attempt, free_fields);
+        if (removed > best) {
+            best = removed;
+            *s = attempt;
         }
+    } while (best < free_fields && clock() - start < CREATE_TIME_LIMIT);
 
-        if (counter >= 9) {
-            delete_with_position(&blocks[block], number, r, c);
-            return 0;
-        }
-
-        ready = solve_sudoku(blocks, block == 8 ? number + 1 : number, block == 8 ? 0 : block + 1);
-    }
-    while (!ready);
-    return 1;
+    return best;
 }
 
-int generate(sudoku *sudoku, int number, int block)
-{
-    if (number == 10)
+int solve(sudoku *s) {
+    grid g;
+    if (!load_grid(&g, s->blocks) || !search(&g, 1, 0)) {
         return 1;
-    int counter = -1;
-    int ready = 0;
-    int r = rand() % 3, c = rand() % 3;
-
-    do {
-        delete_with_position(&sudoku->blocks[block], number, r, c);
-        counter++;
-        c = (c + 1) % 3;
-        if (c == 0)
-            r = (r + 1) % 3;
-
-        while (counter < 9 && !insert(&sudoku->blocks[block], number, r, c)) {
-            counter++;
-            c = (c + 1) % 3;
-            if (c == 0)
-                r = (r + 1) % 3;
-        }
-
-        if (counter >= 9)
-            return 0;
-
-        if (block == 7)
-            ready = generate(sudoku, number + 1, 1);
-        else if (block == 3)
-            ready = generate(sudoku, number, block + 2);
-        else
-            ready = generate(sudoku, number, block + 1);
-
     }
-    while (!ready);
-    return 1;
-}
 
-int solve(sudoku *sudoku)
-{
-    block solution[9];
-    init_blocks(solution);
-    for (int i = 0; i < 9; i++)
-        set_numbers(&solution[i], sudoku->blocks[i].numbers);
-
-    if (!solve_sudoku(solution, 1, 0))
-        return 1;
-
-    set_solution(sudoku, solution);
+    store_grid(&g, s->solution);
     return 0;
-}
-
-void set_solution(sudoku *sudoku, block blocks[9])
-{
-    for (int i = 0; i < 9; i++) {
-        set_numbers(&sudoku->solution[i], blocks[i].numbers);
-    }
-}
-
-void set_sudoku(sudoku *sudoku, block blocks[9])
-{
-    for (int i = 0; i < 9; i++) {
-        set_numbers(&sudoku->blocks[i], blocks[i].numbers);
-    }
-}
-
-void print_blocks(block *blocks)
-{
-    for (int i = 0; i < 9; i = i + 3) {
-        for (int k = 0; k < 3; k++) {
-            for (int j = i; j < i + 3; j++) {
-                for (int a = 0; a < 3; a++)
-                    printf("%i", blocks[j].numbers[k][a]);
-                printf(" ");
-            }
-            printf("\n");
-        }
-        printf("\n");
-    }
-}
-
-void shuffle(number *array, int n)
-{
-    if (n > 1)
-        for (int i = 0; i < n - 1; i++) {
-            int j = i + rand() / (RAND_MAX / (n - i) + 1);
-            number t = array[j];
-            array[j] = array[i];
-            array[i] = t;
-        }
 }

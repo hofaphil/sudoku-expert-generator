@@ -1,31 +1,35 @@
 # sudoku-expert-generator
-The sudoku generator for the SudokuExpert app. This generator creates a sudoku with just one solution. It can also produce a solution for a given sudoku.
+The sudoku generator for the [Sudoku Expert](https://sudoku-expert.com) app. This generator creates a sudoku with just one solution. It can also produce a solution for a given sudoku.
 ### Generate a Sudoku
 Generating a sudoku is very easy. Just pick your desired number of free fields and create one. After calling `create(int free_fields)` the `blocks` and `solution` arrays are filled.<br>
-The `free_fields` indicates how many fields should empty and have to be filled. The passed number can differ from the actual number of free fields, since the algorithm may stop earlier (above all `free_fields > 56`).
+The `free_fields` indicates how many fields should be empty and have to be filled. The returned number of free fields can be lower than requested: `create` retries for up to 0.5 seconds and returns the best sudoku found. Up to 59 free fields are reached reliably, 60 most of the time, more than that hardly ever (the maximum possible is 64).
 
 ```c
 sudoku *sudoku = new_sudoku();
 int free_fields = 50;
 create(sudoku, free_fields); // returns the number of the free fields
 ```
+
 ### Solve a Sudoku
-To solve a sudoku, you need a valid (solveable) `block`:
+To solve a sudoku, you need valid (solvable) numbers:
 ```c
 sudoku *sudoku = new_sudoku();
-set_sudoku(sudoku, &block);     // set your block as sudoku
-solve(sudoku);                  // solve the sudoku
+memcpy(sudoku->blocks, numbers, sizeof(sudoku->blocks));   // set your numbers as sudoku
+solve(sudoku);                                             // returns 0 and fills solution, 1 if not solvable
 ```
-### The sudoku and block struct
-A sudoku consists of `blocks` and `solution`. The `blocks` array represents the sudoku with its empty fields to be filled. The `solution` is - as the name suggests - the corresponding solution.
+
+### The sudoku struct
+A sudoku consists of `blocks` and `solution`. The `blocks` array represents the sudoku with its empty fields (`0`) to be filled. The `solution` is - as the name suggests - the corresponding solution.
 ```c
 typedef struct sudoku
 {
-    block blocks[9];    // the sudoku with empty fields to be filled
-    block solution[9];  // the solution (filled out)
+    int blocks[9][3][3];    // the sudoku, 0 = empty field
+    int solution[9][3][3];  // the filled out solution
 } sudoku;
 ```
-Indexing the block-array:
+A number is accessed with `blocks[block][row][column]`.
+
+Indexing the blocks:
 <table>
   <tr>
     <td>0</td>
@@ -44,20 +48,7 @@ Indexing the block-array:
   </tr>
 </table>
 
-Both of these arrays are `block` types.
-```c
-struct block
-{
-    int numbers[3][3];          // the numbers
-    block *row_partner[2];      // its row-partner in the sudoku
-    block *column_partner[2];   // its column-partner in the sudoku
-    int contains_number[10];    // flags to quickly check number existence
-    int row[3][10];             
-    int column[3][10];
-    int latest_del_index_x, latest_del_index_z;
-};
-```
-Indexing the numbers-array:
+Indexing the row and column within a block:
 <table>
   <tr>
     <td>0, 0</td>

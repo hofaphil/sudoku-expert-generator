@@ -13,8 +13,6 @@ FetchContent_MakeAvailable(gtest)
 add_executable(
         generator-tests
         SudokuTests.cpp
-        NumberTests.cpp
-        BlockTests.cpp
 )
 
 target_link_libraries(
